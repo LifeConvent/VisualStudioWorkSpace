@@ -75,3 +75,14 @@ E:\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.Ga
 E:\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.Properties.Resources.resources
 E:\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.csproj.GenerateResource.Cache
 E:\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.PictureProcessing.resources
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.exe
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.pdb
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\bin\Debug\ImageProcess.exe
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\bin\Debug\ImageProcess.pdb
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.csprojResolveAssemblyReference.cache
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.PictureProcessing.resources
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.FormCut.resources
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.GammaForm.resources
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.Properties.Resources.resources
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.csproj.GenerateResource.Cache
+E:\VisualStudioWorkSpace\VisualStudioWorkSpace\ImageProcess\ImageProcess\obj\x86\Debug\ImageProcess.FormChange.resources

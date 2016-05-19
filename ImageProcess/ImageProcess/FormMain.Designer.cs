@@ -98,9 +98,23 @@ namespace ImageProcess
             this.拉普拉斯边缘检测ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.四邻域ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.八邻域ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.右下ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.轮廓提取ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hough变换ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.轮廓提取ToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
+            this.形态学ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.腐蚀运算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.膨胀运算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.开运算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.闭运算ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.细化处理ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.色彩空间转换ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hSVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.hSIToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.yUVToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.yCbCrToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.pictureBox1 = new System.Windows.Forms.PictureBox();
             this.pictureBox2 = new System.Windows.Forms.PictureBox();
-            this.右下ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.statusStrip1.SuspendLayout();
             this.menuStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.pictureBox1)).BeginInit();
@@ -136,7 +150,10 @@ namespace ImageProcess
             this.图像处理ToolStripMenuItem,
             this.彩色图像处理ToolStripMenuItem,
             this.调整ToolStripMenuItem,
-            this.边缘检测ToolStripMenuItem});
+            this.边缘检测ToolStripMenuItem,
+            this.轮廓提取ToolStripMenuItem,
+            this.形态学ToolStripMenuItem,
+            this.色彩空间转换ToolStripMenuItem});
             this.menuStrip1.Location = new System.Drawing.Point(0, 0);
             this.menuStrip1.MdiWindowListItem = this.文件ToolStripMenuItem;
             this.menuStrip1.Name = "menuStrip1";
@@ -643,16 +660,133 @@ namespace ImageProcess
             // 四邻域ToolStripMenuItem
             // 
             this.四邻域ToolStripMenuItem.Name = "四邻域ToolStripMenuItem";
-            this.四邻域ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.四邻域ToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.四邻域ToolStripMenuItem.Text = "四邻域";
             this.四邻域ToolStripMenuItem.Click += new System.EventHandler(this.四邻域ToolStripMenuItem_Click);
             // 
             // 八邻域ToolStripMenuItem
             // 
             this.八邻域ToolStripMenuItem.Name = "八邻域ToolStripMenuItem";
-            this.八邻域ToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.八邻域ToolStripMenuItem.Size = new System.Drawing.Size(112, 22);
             this.八邻域ToolStripMenuItem.Text = "八邻域";
             this.八邻域ToolStripMenuItem.Click += new System.EventHandler(this.八邻域ToolStripMenuItem_Click);
+            // 
+            // 右下ToolStripMenuItem
+            // 
+            this.右下ToolStripMenuItem.Name = "右下ToolStripMenuItem";
+            this.右下ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
+            this.右下ToolStripMenuItem.Text = "右下边缘";
+            this.右下ToolStripMenuItem.Click += new System.EventHandler(this.右下ToolStripMenuItem_Click);
+            // 
+            // 轮廓提取ToolStripMenuItem
+            // 
+            this.轮廓提取ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.hough变换ToolStripMenuItem,
+            this.轮廓提取ToolStripMenuItem1});
+            this.轮廓提取ToolStripMenuItem.Name = "轮廓提取ToolStripMenuItem";
+            this.轮廓提取ToolStripMenuItem.Size = new System.Drawing.Size(68, 21);
+            this.轮廓提取ToolStripMenuItem.Text = "轮廓提取";
+            // 
+            // hough变换ToolStripMenuItem
+            // 
+            this.hough变换ToolStripMenuItem.Name = "hough变换ToolStripMenuItem";
+            this.hough变换ToolStripMenuItem.Size = new System.Drawing.Size(139, 22);
+            this.hough变换ToolStripMenuItem.Text = "Hough变换";
+            this.hough变换ToolStripMenuItem.Click += new System.EventHandler(this.hough变换ToolStripMenuItem_Click);
+            // 
+            // 轮廓提取ToolStripMenuItem1
+            // 
+            this.轮廓提取ToolStripMenuItem1.Name = "轮廓提取ToolStripMenuItem1";
+            this.轮廓提取ToolStripMenuItem1.Size = new System.Drawing.Size(139, 22);
+            this.轮廓提取ToolStripMenuItem1.Text = "轮廓提取";
+            this.轮廓提取ToolStripMenuItem1.Click += new System.EventHandler(this.轮廓提取ToolStripMenuItem1_Click);
+            // 
+            // 形态学ToolStripMenuItem
+            // 
+            this.形态学ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.腐蚀运算ToolStripMenuItem,
+            this.膨胀运算ToolStripMenuItem,
+            this.开运算ToolStripMenuItem,
+            this.闭运算ToolStripMenuItem,
+            this.细化处理ToolStripMenuItem});
+            this.形态学ToolStripMenuItem.Name = "形态学ToolStripMenuItem";
+            this.形态学ToolStripMenuItem.Size = new System.Drawing.Size(56, 21);
+            this.形态学ToolStripMenuItem.Text = "形态学";
+            // 
+            // 腐蚀运算ToolStripMenuItem
+            // 
+            this.腐蚀运算ToolStripMenuItem.Name = "腐蚀运算ToolStripMenuItem";
+            this.腐蚀运算ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.腐蚀运算ToolStripMenuItem.Text = "腐蚀运算";
+            this.腐蚀运算ToolStripMenuItem.Click += new System.EventHandler(this.腐蚀运算ToolStripMenuItem_Click);
+            // 
+            // 膨胀运算ToolStripMenuItem
+            // 
+            this.膨胀运算ToolStripMenuItem.Name = "膨胀运算ToolStripMenuItem";
+            this.膨胀运算ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.膨胀运算ToolStripMenuItem.Text = "膨胀运算";
+            this.膨胀运算ToolStripMenuItem.Click += new System.EventHandler(this.膨胀运算ToolStripMenuItem_Click);
+            // 
+            // 开运算ToolStripMenuItem
+            // 
+            this.开运算ToolStripMenuItem.Name = "开运算ToolStripMenuItem";
+            this.开运算ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.开运算ToolStripMenuItem.Text = "开运算";
+            this.开运算ToolStripMenuItem.Click += new System.EventHandler(this.开运算ToolStripMenuItem_Click);
+            // 
+            // 闭运算ToolStripMenuItem
+            // 
+            this.闭运算ToolStripMenuItem.Name = "闭运算ToolStripMenuItem";
+            this.闭运算ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.闭运算ToolStripMenuItem.Text = "闭运算";
+            this.闭运算ToolStripMenuItem.Click += new System.EventHandler(this.闭运算ToolStripMenuItem_Click);
+            // 
+            // 细化处理ToolStripMenuItem
+            // 
+            this.细化处理ToolStripMenuItem.Name = "细化处理ToolStripMenuItem";
+            this.细化处理ToolStripMenuItem.Size = new System.Drawing.Size(124, 22);
+            this.细化处理ToolStripMenuItem.Text = "细化处理";
+            this.细化处理ToolStripMenuItem.Click += new System.EventHandler(this.细化处理ToolStripMenuItem_Click);
+            // 
+            // 色彩空间转换ToolStripMenuItem
+            // 
+            this.色彩空间转换ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.hSVToolStripMenuItem,
+            this.hSIToolStripMenuItem,
+            this.yUVToolStripMenuItem,
+            this.yCbCrToolStripMenuItem});
+            this.色彩空间转换ToolStripMenuItem.Name = "色彩空间转换ToolStripMenuItem";
+            this.色彩空间转换ToolStripMenuItem.Size = new System.Drawing.Size(92, 21);
+            this.色彩空间转换ToolStripMenuItem.Text = "色彩空间转换";
+            this.色彩空间转换ToolStripMenuItem.Click += new System.EventHandler(this.色彩空间转换ToolStripMenuItem_Click);
+            // 
+            // hSVToolStripMenuItem
+            // 
+            this.hSVToolStripMenuItem.Name = "hSVToolStripMenuItem";
+            this.hSVToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.hSVToolStripMenuItem.Text = "HSV";
+            this.hSVToolStripMenuItem.Click += new System.EventHandler(this.hSVToolStripMenuItem_Click);
+            // 
+            // hSIToolStripMenuItem
+            // 
+            this.hSIToolStripMenuItem.Name = "hSIToolStripMenuItem";
+            this.hSIToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.hSIToolStripMenuItem.Text = "HSI";
+            this.hSIToolStripMenuItem.Click += new System.EventHandler(this.hSIToolStripMenuItem_Click);
+            // 
+            // yUVToolStripMenuItem
+            // 
+            this.yUVToolStripMenuItem.Name = "yUVToolStripMenuItem";
+            this.yUVToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.yUVToolStripMenuItem.Text = "YUV";
+            this.yUVToolStripMenuItem.Click += new System.EventHandler(this.yUVToolStripMenuItem_Click);
+            // 
+            // yCbCrToolStripMenuItem
+            // 
+            this.yCbCrToolStripMenuItem.Name = "yCbCrToolStripMenuItem";
+            this.yCbCrToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.yCbCrToolStripMenuItem.Text = "YCbCr";
+            this.yCbCrToolStripMenuItem.Click += new System.EventHandler(this.yCbCrToolStripMenuItem_Click);
             // 
             // pictureBox1
             // 
@@ -675,13 +809,6 @@ namespace ImageProcess
             this.pictureBox2.SizeMode = System.Windows.Forms.PictureBoxSizeMode.Zoom;
             this.pictureBox2.TabIndex = 3;
             this.pictureBox2.TabStop = false;
-            // 
-            // 右下ToolStripMenuItem
-            // 
-            this.右下ToolStripMenuItem.Name = "右下ToolStripMenuItem";
-            this.右下ToolStripMenuItem.Size = new System.Drawing.Size(172, 22);
-            this.右下ToolStripMenuItem.Text = "右下边缘";
-            this.右下ToolStripMenuItem.Click += new System.EventHandler(this.右下ToolStripMenuItem_Click);
             // 
             // PictureProcessing
             // 
@@ -792,6 +919,20 @@ namespace ImageProcess
         private System.Windows.Forms.ToolStripMenuItem 四邻域ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 八邻域ToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem 右下ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 轮廓提取ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem hough变换ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 轮廓提取ToolStripMenuItem1;
+        private System.Windows.Forms.ToolStripMenuItem 形态学ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 腐蚀运算ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 膨胀运算ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 开运算ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 闭运算ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 细化处理ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem 色彩空间转换ToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem hSVToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem hSIToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem yUVToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem yCbCrToolStripMenuItem;
     }
 }
 

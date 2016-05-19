@@ -1580,7 +1580,7 @@ namespace ImageProcess
         /// <param name="srcBmp">原始图像</param>  
         /// <param name="dstBmp">目标图像</param>  
         /// <returns>处理成功 true 失败 false</returns>  
-        public static bool Erode(Bitmap srcBmp, out Bitmap dstBmp)
+        public static bool enErode(Bitmap srcBmp, out Bitmap dstBmp)
         {
             if (srcBmp == null)
             {
@@ -1646,7 +1646,7 @@ namespace ImageProcess
         /// <param name="srcBmp">原始图像</param>  
         /// <param name="dstBmp">目标图像</param>  
         /// <returns>处理成功 true 失败 false</returns>  
-        public static bool enErode(Bitmap srcBmp, out Bitmap dstBmp)
+        public static bool Erode(Bitmap srcBmp, out Bitmap dstBmp)
         {
             if (srcBmp == null)
             {
@@ -1662,9 +1662,9 @@ namespace ImageProcess
             BitmapData bmpDataDst = dstBmp.LockBits(new Rectangle(0, 0, dstBmp.Width, dstBmp.Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);
             unsafe
             {
-                int[] grayValueArray = new int[25];
-                long[] index = new long[25];
-                for (int i = 0; i < 25; i++)
+                int[] grayValueArray = new int[10];
+                long[] index = new long[10];
+                for (int i = 0; i < 10; i++)
                 {
                     grayValueArray[i] = 255;
                 }
@@ -1736,7 +1736,7 @@ namespace ImageProcess
 
         private void 拉普拉斯锐化ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-           pictureBox2.Image = SharpenImage(sourceBitmap);
+            pictureBox2.Image = SharpenImage(sourceBitmap);
         }
 
         public Bitmap SharpenImage(Bitmap bmp)
@@ -1956,9 +1956,894 @@ namespace ImageProcess
 
             return newbmp;
         }
+
+        private void hough变换ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            pictureBox2.Image = hough_line(sourceBitmap, 2);
+            //pictureBox2.Image = HoughLine(sourceBitmap, 500,1);
+        }
+
+        /// <summary>
+        /// 检测直线
+        /// </summary>
+        /// <param name="cross_num">hough变换后的曲线交点个数，取值越大，找出的直线越少</param>
+        public Bitmap hough_line(Bitmap bmpobj, int cross_num)
+        {
+            int x = bmpobj.Width;
+            int y = bmpobj.Height;
+            int rho_max = (int)Math.Floor(Math.Sqrt(x * x + y * y)) + 1; //由原图数组坐标算出ρ最大值，并取整数部分加1
+                                                                         //此值作为ρ，θ坐标系ρ最大值
+            int[,] accarray = new int[rho_max, 180]; //定义ρ，θ坐标系的数组，初值为0。
+                                                     //θ的最大值，180度
+
+            double[] Theta = new double[180];
+            //定义θ数组，确定θ取值范围
+            double i = 0;
+            for (int index = 0; index < 180; index++)
+            {
+                Theta[index] = i;
+                i += Math.PI / 180;
+            }
+
+            double rho;
+            int rho_int;
+            for (int n = 0; n < x; n++)
+            {
+                for (int m = 0; m < y; m++)
+                {
+                    Color pixel = bmpobj.GetPixel(n, m);
+                    if (pixel.R == 0)
+                    {
+                        for (int k = 0; k < 180; k++)
+                        {
+                            //将θ值代入hough变换方程，求ρ值
+                            rho = (m * Math.Cos(Theta[k])) + (n * Math.Sin(Theta[k]));
+                            //将ρ值与ρ最大值的和的一半作为ρ的坐标值（数组坐标），这样做是为了防止ρ值出现负数
+                            rho_int = (int)Math.Round(rho / 2 + rho_max / 2);
+                            //在ρθ坐标（数组）中标识点，即计数累加
+                            accarray[rho_int, k] = accarray[rho_int, k] + 1;
+                        }
+                    }
+                }
+            }
+
+            //=======利用hough变换提取直线======
+            //寻找100个像素以上的直线在hough变换后形成的点
+            const int max_line = 1000;
+            int[] case_accarray_n = new int[max_line];
+            int[] case_accarray_m = new int[max_line];
+            int K = 0; //存储数组计数器
+            for (int rho_n = 0; rho_n < rho_max; rho_n++) //在hough变换后的数组中搜索
+            {
+                for (int theta_m = 0; theta_m < 180; theta_m++)
+                {
+                    if (accarray[rho_n, theta_m] >= cross_num && K < max_line) //设定直线的最小值
+                    {
+                        case_accarray_n[K] = rho_n; //存储搜索出的数组下标
+                        case_accarray_m[K] = theta_m;
+                        K = K + 1;
+                    }
+                }
+            }
+
+            //把这些点构成的直线提取出来,输出图像数组为I_out
+            //I_out=ones(x,y).*255;
+            Bitmap I_out = new Bitmap(x, y);
+            for (int n = 0; n < x; n++)
+            {
+                for (int m = 0; m < y; m++)
+                {
+                    //首先设置为白色
+                    I_out.SetPixel(n, m, Color.White);
+                    Color pixel = bmpobj.GetPixel(n, m);
+                    if (pixel.R == 0)
+                    {
+                        for (int k = 0; k < 180; k++)
+                        {
+                            rho = (m * Math.Cos(Theta[k])) + (n * Math.Sin(Theta[k]));
+                            rho_int = (int)Math.Round(rho / 2 + rho_max / 2);
+                            //如果正在计算的点属于100像素以上点，则把它提取出来
+                            for (int a = 0; a < K - 1; a++)
+                            {
+                                //if rho_int==case_accarray_n(a) && k==case_accarray_m(a)%%%==gai==%%% k==case_accarray_m(a)&rho_int==case_accarray_n(a)
+                                if (rho_int == case_accarray_n[a] && k == case_accarray_m[a])
+                                    I_out.SetPixel(n, m, Color.Black);
+                            }
+                        }
+                    }
+
+                }
+            }
+            return I_out;
+        }
+        public Bitmap CreateGrayscaleImage(int width, int height)
+        {
+
+            Bitmap bmp = new Bitmap(width, height, PixelFormat.Format8bppIndexed);
+            // 设置调色板
+            SetGrayscalePalette(bmp);
+            return bmp;
+
+        }
+        private void SetGrayscalePalette(Bitmap srcImg)
+        {
+
+            // 检查像素格式
+            if (srcImg.PixelFormat != PixelFormat.Format8bppIndexed)
+                throw new ArgumentException();
+
+            // 获取调色板
+            ColorPalette cp = srcImg.Palette;
+            // 初始化调色板
+            for (int i = 0; i < 256; i++)
+            {
+
+                cp.Entries[i] = Color.FromArgb(i, i, i);
+
+            }
+            // 设置调色板
+            srcImg.Palette = cp;
+
+        }
+
+        private void 轮廓提取ToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            int Height = sourceBitmap.Height;
+            int Width = sourceBitmap.Width;
+            Bitmap bitmap = new Bitmap(Width, Height, PixelFormat.Format24bppRgb);
+            Bitmap MyBitmap = (Bitmap)sourceBitmap;
+            BitmapData oldData = MyBitmap.LockBits(new Rectangle(0, 0, Width, Height), ImageLockMode.ReadOnly, PixelFormat.Format24bppRgb); //原图
+            BitmapData newData = bitmap.LockBits(new Rectangle(0, 0, Width, Height), ImageLockMode.ReadWrite, PixelFormat.Format24bppRgb);  //新图即边缘图
+            unsafe
+            {
+                //提取边缘，边缘置为黑色，其他部分置为白色
+                byte* pin_1 = (byte*)(oldData.Scan0.ToPointer());
+                byte* pin_2 = pin_1 + (oldData.Stride);
+                byte* pout = (byte*)(newData.Scan0.ToPointer());
+                for (int y = 0; y < oldData.Height - 1; y++)
+                {
+                    for (int x = 0; x < oldData.Width; x++)
+                    {
+                        //使用robert算子
+                        double b = System.Math.Sqrt(((double)pin_1[0] - (double)(pin_2[0] + 3)) * ((double)pin_1[0] - (double)(pin_2[0] + 3)) + ((double)(pin_1[0] + 3) - (double)pin_2[0]) * ((double)(pin_1[0] + 3) - (double)pin_2[0]));
+                        double g = System.Math.Sqrt(((double)pin_1[1] - (double)(pin_2[1] + 3)) * ((double)pin_1[1] - (double)(pin_2[1] + 3)) + ((double)(pin_1[1] + 3) - (double)pin_2[1]) * ((double)(pin_1[1] + 3) - (double)pin_2[1]));
+                        double r = System.Math.Sqrt(((double)pin_1[2] - (double)(pin_2[2] + 3)) * ((double)pin_1[2] - (double)(pin_2[2] + 3)) + ((double)(pin_1[2] + 3) - (double)pin_2[2]) * ((double)(pin_1[2] + 3) - (double)pin_2[2]));
+                        double bgr = b + g + r;
+
+                        if (bgr > 80) //阈值，超过阈值判定为边缘（选取适当的阈值）
+                        {
+                            b = 0;
+                            g = 0;
+                            r = 0;
+                        }
+                        else
+                        {
+                            b = 255;
+                            g = 255;
+                            r = 255;
+                        }
+                        pout[0] = (byte)(b);
+                        pout[1] = (byte)(g);
+                        pout[2] = (byte)(r);
+                        pin_1 = pin_1 + 3;
+                        pin_2 = pin_2 + 3;
+                        pout = pout + 3;
+
+                    }
+                    pin_1 += oldData.Stride - oldData.Width * 3;
+                    pin_2 += oldData.Stride - oldData.Width * 3;
+                    pout += newData.Stride - newData.Width * 3;
+                }
+
+                //加粗线条
+                byte* pin_5 = (byte*)(newData.Scan0.ToPointer());
+                for (int y = 0; y < oldData.Height - 1; y++)
+                {
+                    for (int x = 3; x < oldData.Width; x++)
+                    {
+                        if (pin_5[0] == 0 && pin_5[1] == 0 && pin_5[2] == 0)
+                        {
+                            pin_5[-3] = 0;
+                            pin_5[-2] = 0;
+                            pin_5[-1] = 0;      //边缘点的前一个像素点置为黑色                                                  
+                        }
+                        pin_5 += 3;
+
+                    }
+                    pin_5 += newData.Stride - newData.Width * 3;
+                }
+
+                /*//把原图和边缘图重合
+                byte* pin_3 = (byte*)(oldData.Scan0.ToPointer());
+                byte* pin_4 = (byte*)(newData.Scan0.ToPointer());
+                for (int y = 0; y < oldData.Height - 1; y++)
+                {
+                    for (int x = 0; x < oldData.Width; x++)
+                    {
+                        if (pin_4[0] == 255 && pin_4[1] == 255 && pin_4[2] == 255)
+                        {
+                            pin_4[0] = pin_3[0];
+                            pin_4[1] = pin_3[1];
+                            pin_4[2] = pin_3[2];
+                        }
+                        pin_3 += 3;
+                        pin_4 += 3;
+                    }
+                    pin_3 += oldData.Stride - oldData.Width * 3;
+                    pin_4 += newData.Stride - newData.Width * 3;
+                }*/
+                //......
+                bitmap.UnlockBits(newData);
+                MyBitmap.UnlockBits(oldData);
+                pictureBox2.Image = bitmap;
+
+        }
     }
 
-    public class LockBitmap
+        private void 腐蚀运算ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = null;
+            Erode(sourceBitmap, out myimage);
+            pictureBox2.Image = myimage;
+        }
+
+        private void 膨胀运算ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = null;
+            enErode(sourceBitmap,out myimage);
+            pictureBox2.Image = myimage;
+        }
+
+        private void 开运算ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = null;
+            Erode(sourceBitmap, out myimage);
+            enErode(myimage ,out myimage);
+            pictureBox2.Image = myimage;
+        }
+
+        private void 闭运算ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = null;
+            enErode(sourceBitmap, out myimage);
+            Erode(myimage, out myimage);
+            pictureBox2.Image = myimage;
+        }
+
+        /// <summary>
+        /// hough变换测直线
+        /// </summary>
+        /// <param name="srcBitmap"></param>
+        /// <param name="hough_space">精度，0~pi分配到多少格</param>
+        /// <param name="threshold">阀值 （0,1）</param>
+        /// <returns></returns>
+        public Bitmap HoughLine(Bitmap srcBitmap, int hough_space, double threshold)
+        {
+
+            int w = srcBitmap.Width;
+            int h = srcBitmap.Height;
+            int maxRho = (int)Math.Sqrt(w * w + h * h);
+            double hough_interval = Math.PI / (double)hough_space;
+            //由于范围在-sqrt(x^2+y^2)~sqrt(x^2+y^2)之间，故将坐标调整,以满足数组索引非负。
+            int[] houghMap = new int[(2 * maxRho) * hough_space];
+            int maxHough = 0;
+
+            Bitmap houghBitmap = CreateGrayscaleImage(hough_space, (2 * maxRho));
+            Bitmap rsImage = CreateGrayscaleImage(w, h);
+
+            Rectangle rect = new Rectangle(0, 0, w, h);
+            Rectangle houghRect = new Rectangle(0, 0, hough_space, (2 * maxRho));
+
+            BitmapData houghData = houghBitmap.LockBits(houghRect, ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
+            BitmapData bmpData = srcBitmap.LockBits(rect, ImageLockMode.ReadOnly, srcBitmap.PixelFormat);
+            BitmapData rsData = rsImage.LockBits(rect, ImageLockMode.WriteOnly, PixelFormat.Format8bppIndexed);
+
+            int step = 1;
+            switch (srcBitmap.PixelFormat)
+            {
+
+                case PixelFormat.Format24bppRgb:
+                    step = 3;
+                    break;
+                case PixelFormat.Format32bppArgb:
+                    step = 4;
+                    break;
+                case PixelFormat.Format8bppIndexed:
+                    step = 1;
+                    break;
+
+            }
+
+            int houghstride = houghData.Stride;
+            int istride = bmpData.Stride;
+            int ostride = rsData.Stride;
+
+            int lineCount = 0;
+
+            unsafe
+            {
+
+                byte* phough = (byte*)houghData.Scan0.ToPointer();
+                byte* pin = (byte*)bmpData.Scan0.ToPointer();
+                byte* pout = (byte*)rsData.Scan0.ToPointer();
+
+                //hough变换
+                for (int y = 0; y < h; y++)
+                {
+
+                    for (int x = 0; x < w; x++)
+                    {
+
+                        if (pin[y * istride + x * step] == 255)
+                        {
+
+                            for (int cell = 0; cell < hough_space; cell++)
+                            {
+
+                                double theta = cell * hough_interval;
+                                //rho=x*cos(theta)+y*sin(theta) 由于范围在-sqrt(x^2+y^2)~sqrt(x^2+y^2)之间，故将坐标调整,以满足数组索引非负。
+                                int rho = Convert.ToInt32(x * Math.Cos(theta) + y * Math.Sin(theta)) + maxRho;
+                                if (rho < 0 || rho > (2 * maxRho)) continue;
+
+                                houghMap[rho * hough_space + cell]++;
+
+                                //找出最大霍夫变换值
+                                if (maxHough < houghMap[rho * hough_space + cell])
+                                    maxHough = houghMap[rho * hough_space + cell];
+
+                            }
+
+                        }
+
+                    }
+
+                }
+
+                int hough_threshold = (int)(threshold * maxHough);
+
+                //反变换
+                for (int rho = 0; rho < (2 * maxRho); rho++)
+                {
+
+                    for (int cell = 0; cell < hough_space; cell++)
+                    {
+
+                        phough[rho * houghstride + cell] = (byte)(houghMap[rho * hough_space + cell] * 255 / maxHough);
+                        if (houghMap[rho * hough_space + cell] < hough_threshold) continue;
+
+                        //满足阀值                       
+                        int houghValue = houghMap[rho * hough_space + cell];
+
+                        //作循环延拓
+                        int v1 = rho - 1 > 0 ? (rho - 1) * hough_space : ((2 * maxRho) - 1) * hough_space;
+                        int v2 = rho * hough_space;
+                        int v3 = rho + 1 - (2 * maxRho) < 0 ? (rho + 1) * hough_space : 0;
+                        int h1 = cell - 1 > 0 ? (cell - 1) : (hough_space - 1);
+                        int h2 = cell;
+                        int h3 = cell + 1 - hough_space < 0 ? (cell + 1) : 1;
+
+                        //是否局部极值
+                        if (houghMap[v1 + h1] <= houghValue && houghMap[v1 + h2] <= houghValue && houghMap[v1 + h3] <= houghValue
+                            && houghMap[v2 + h1] <= houghValue && houghMap[v2 + h3] <= houghValue
+                            && houghMap[v3 + h1] <= houghValue && houghMap[v3 + h2] <= houghValue && houghMap[v3 + h3] <= houghValue)
+                        {
+
+                            //是一条直线
+                            lineCount++;
+                            //反变换
+                            double dy = Math.Sin(cell * hough_interval);
+                            double dx = Math.Cos(cell * hough_interval);
+                            //调整真实的rho
+                            int realRho = rho - maxRho;
+
+                            if (dy == 0)//斜率90
+                            {
+
+                                int row = (int)(realRho / dx);
+                                for (int col = 0; col < h; col++)
+                                {
+
+                                    pout[col * ostride + row] = 255;
+
+                                }
+
+                            }
+                            else if (dx == 0)//斜率0
+                            {
+
+                                int col = (int)(realRho / dy);
+                                for (int row = 0; row < w; row++)
+                                {
+
+                                    pout[col * ostride + row] = 255;
+
+                                }
+
+                            }
+                            else
+                            {
+
+                                for (int row = 0; row < w; row++)
+                                {
+
+                                    int col = (int)((realRho - row * dx) / dy);
+                                    if (col > -1 && col < h)
+                                        pout[col * ostride + row] = 255;
+
+                                }
+
+                            }
+
+                        }
+
+
+                    }
+
+                }
+
+
+            }
+
+            houghBitmap.UnlockBits(houghData);
+            srcBitmap.UnlockBits(bmpData);
+            rsImage.UnlockBits(rsData);
+
+            return rsImage;
+
+        }
+
+        private void 细化处理ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = ToThinner(sourceBitmap);
+            pictureBox2.Image = myimage;
+        }
+
+        private void 色彩空间转换ToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private int getMax(int a, int b, int c) {
+            int temp = 0;
+            if (a < b)
+            {
+                temp = b;
+            }
+            else { temp = a; }
+            if (temp < c)
+            {
+                temp = c;
+            }
+            return temp;
+        }
+
+        private int getMin(int a, int b, int c)
+        {
+            int temp = 0;
+            if (a > b)
+            {
+                temp = b;
+            }
+            else { temp = a; }
+            if (temp > c)
+            {
+                temp = c;
+            }
+            return temp;
+        }
+
+        private void hSVToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Color color;
+            int r, g, b = 0;
+            height = sourceBitmap.Height;
+            width = sourceBitmap.Width;
+            for (int i = 0;i < width; i++){
+                for (int j = 0; j < height;j++) {
+                    color = sourceBitmap.GetPixel(i,j);
+                    r = color.R;
+                    g = color.G;
+                    b = color.B;
+                    int Hi, f, p, q, t;
+                    int H =0,S=0,V=0;
+                    int max = getMax(r, g, b);
+                    int min = getMin(r, g, b);
+                    if (max != min)
+                    {
+                        if (max == r)
+                        {
+                            H = (g - b) / (max - min);
+                        }
+                        else if (max == g)
+                        {
+                            H = 2 + (b - r) / (max - min);
+                        }
+                        else if (max == b)
+                        {
+                            H = 4 + (r - g) / (max - min);
+                        }
+                    }
+                    H = H * 60;
+                    if (H < 0)
+                    {
+                        H = H + 360;
+                    }
+                    V = max;
+                    if (max != 0)
+                    {
+                        S = (max - min) / max;
+                    }
+
+                    Hi = Math.Abs(H / 60);
+                    f = H / 60 - Hi;
+                    p = V * (1 - S);
+                    q = V * (1 - f * S);
+                    t = V * (1 - (1 - f) * S);
+                    if (Hi == 0)
+                    {
+                        r = V;
+                        g = t;
+                        b = p;
+                    }
+                    else if (Hi == 1)
+                    {
+                        r = q;
+                        g = V;
+                        b = p;
+                    }
+                    else if (Hi == 2)
+                    {
+                        r = p;
+                        g = V;
+                        b = t;
+                    }
+                    else if (Hi == 3)
+                    {
+                        r = p;
+                        g = q;
+                        b = V;
+                    }
+                    else if (Hi == 4)
+                    {
+                        r = t;
+                        g = p;
+                        b = V;
+                    }
+                    else if (Hi == 5)
+                    {
+                        r = V;
+                        g = p;
+                        b = q;
+                    }
+                    sourceBitmap.SetPixel(i, j, Color.FromArgb(r, g, b));
+                }
+            }
+            pictureBox2.Image = sourceBitmap;
+        }
+
+        private void hSIToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = sourceBitmap;
+            Color color;
+            int r, g, b = 0;
+            for (int i = 0; i < sourceBitmap.Width; i++)
+            {
+                for (int j = 0; j < sourceBitmap.Height; j++)
+                {
+                    int H, S, I;
+                    color = sourceBitmap.GetPixel(i, j);
+                    r = color.R;
+                    g = color.G;
+                    b = color.B;
+                    H = S = I = 0;
+                    if (g != b && r != 0 && g != 0 && b != 0)
+                    {
+                        double F = (2 * r - g - b) / (g - b);
+                        I = (r + g + b) / 3;
+                        if (g > b)
+                        {
+                            H = (90 - (int)Math.Tan((double)F / (int)Math.Sqrt(3.0))) / 360;
+                        }
+                        else
+                        {
+                            H = ((90 - (int)Math.Tan((double)F / Math.Sqrt(3.0))) + 180) / 360;
+                        }
+                        S = 1 - getMin(r, g, b) / (b);
+                    }
+                    if (H >= 0 && H < 120)
+                    {
+                        r = (int)(1 + S * Math.Cos(H * 1.0) / Math.Cos(1.0*(60 - H)) / Math.Sqrt(3.0));
+                        b = (1 - S) / (int)Math.Sqrt(3.0);
+                        g = I * (int)Math.Sqrt(3.0) - r - b;
+                    }
+                    else if (H >= 120 && H < 240)
+                    {
+                        r = (int)(1 + S * Math.Cos(H * 1.0 - 120) / Math.Cos((180 - H) * 1.0)) / (int)Math.Sqrt(3.0);
+                        b = (1 - S) / (int)Math.Sqrt(3.0);
+                        g = I * (int)Math.Sqrt(3.0) - r - b;
+                    }
+                    else if (H >= 240 && H < 360)
+                    {
+                        r = (int)(1 + S * Math.Cos(H * 1.0 - 240) / Math.Cos((300 - H) * 1.0)) / (int)Math.Sqrt(3.0);
+                        b = (1 - S) / (int)Math.Sqrt(3.0);
+                        g = I * (int)Math.Sqrt(3.0) - r - b;
+                    }
+                    g = Math.Abs(g);
+                    myimage.SetPixel(i, j, Color.FromArgb(r, g, b));
+                }
+            }
+            pictureBox2.Image = myimage;
+        }
+
+        private void yUVToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = sourceBitmap;
+            Color color;
+            int r, g, b = 0;
+            double Y, U, V;
+            for (int i = 0; i < sourceBitmap.Width; i++)
+            {
+                for (int j = 0; j < sourceBitmap.Height; j++)
+                {
+                    color = sourceBitmap.GetPixel(i, j);
+                    r = color.R;
+                    g = color.G;
+                    b = color.B;
+                    Y = U = V = 0;
+                    Y = (0.299 * r + 0.587 * g + 0.114 * b);
+                    U = (-0.1687 * r - 0.3313 * g + 0.5 * b);
+                    V = (0.5 * r - 0.4187 * g - 0.0813 * b);
+                    r = (int)(Y + 1.401 * V)/2;
+                    g = (int)(Y - 0.34414 * U - 0.71414 * V)/2;
+                    b = (int)(Y + 1.1772 * U)/2;
+                    g = Math.Abs(g);
+                    myimage.SetPixel(i, j, Color.FromArgb(r, g, b));
+                }
+            }
+            pictureBox2.Image = myimage;
+        }
+
+        private void yCbCrToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Bitmap myimage = sourceBitmap;
+            Color color;
+            int r, g, b = 0;
+            double Y, Cb, Cr;
+            Y = Cb = Cr = 0;
+            for (int i = 0; i < sourceBitmap.Width; i++)
+            {
+                for (int j = 0; j < sourceBitmap.Height; j++)
+                {
+                    color = sourceBitmap.GetPixel(i, j);
+                    r = color.R;
+                    g = color.G;
+                    b = color.B;
+                    Y = 0.299 * r + 0.587 * g + 0.114 * b;
+                    Cb = -0.1687 * r - 0.3313 * g + 0.5 * b + 128;
+                    Cr = 0.5 * r - 0.4187 * g - 0.0813 * b + 128;
+                    r = (int)(Y + 1.402 * (Cr - 128))/2;
+                    g = (int)(Y - 0.34414 * (Cb - 128) - 0.71414 * (Cr - 128))/2;
+                    b = (int)(Y + 1.772 * (Cb - 128))/2;
+                    myimage.SetPixel(i, j, Color.FromArgb(r, g, b));
+                }
+            }
+            pictureBox2.Image = myimage;
+        }
+
+        /// <summary>
+        /// 图形细化
+        /// </summary>
+        /// <param name="srcImg"></param>
+        /// <returns></returns>
+        public unsafe Bitmap ToThinner(Bitmap srcImg)
+        {
+            int iw = srcImg.Width;
+            int ih = srcImg.Height;
+            bool bModified;     //二值图像修改标志            
+            bool bCondition1;   //细化条件1标志            
+            bool bCondition2;   //细化条件2标志            
+            bool bCondition3;   //细化条件3标志            
+            bool bCondition4;   //细化条件4标志
+            int nCount;
+            //5X5像素块            
+            byte[,] neighbour = new byte[5, 5];
+            //新建临时存储图像            
+            Bitmap NImg = new Bitmap(iw, ih, srcImg.PixelFormat);
+            bModified = true;
+            //细化修改标志, 用作循环条件
+            BitmapData dstData = srcImg.LockBits(new Rectangle(0, 0, iw, ih), ImageLockMode.ReadWrite, srcImg.PixelFormat);
+            byte* data = (byte*)(dstData.Scan0);
+            //将图像转换为0,1二值得图像; 
+            int step = dstData.Stride;
+            for (int i = 0; i < dstData.Height; i++)
+            {
+                for (int j = 0; j < dstData.Width * 3; j += 3)
+                {
+                    if (data[i * step + j] > 128)
+                        //如果是白线条，只要将0改成1，将1改成0
+                        data[i * step + j]
+                            = data[i * step + j + 1]
+                            = data[i * step + j + 2]
+                            = 0;
+                    else
+                        data[i * step + j]
+                            = data[i * step + j + 1]
+                            = data[i * step + j + 2]
+                            = 1;
+                }
+            }
+
+            BitmapData dstData1 = NImg.LockBits(new Rectangle(0, 0, iw, ih), ImageLockMode.ReadWrite, NImg.PixelFormat);
+            byte* data1 = (byte*)(dstData1.Scan0);
+            int step1 = dstData1.Stride;
+            //细化循环开始           
+            while (bModified)
+            {
+                bModified = false;
+                //初始化临时二值图像NImg                
+                for (int i = 0; i < dstData1.Height; i++)
+                {
+                    for (int j = 0; j < dstData1.Width * 3; j++)
+                    {
+                        data1[i * step1 + j] = 0;
+                    }
+                }
+                for (int i = 2; i < ih - 2; i++)
+                {
+                    for (int j = 6; j < iw * 3 - 6; j += 3)
+                    {
+                        bCondition1 = false;
+                        bCondition2 = false;
+                        bCondition3 = false;
+                        bCondition4 = false;
+                        if (data[i * step + j] == 0)
+                            //若图像的当前点为白色，则跳过                           
+                            continue;
+                        for (int k = 0; k < 5; k++)
+                        {
+                            //取以当前点为中心的5X5块                           
+                            for (int l = 0; l < 5; l++)
+                            {
+                                //1代表黑色, 0代表白色                             
+                                //neighbour[k, l] = bw[i + k - 2, j + l - 2];         
+                                //neighbour[k, l] = data[(i + k - 2) * step + (j + l - 2)];
+                                neighbour[k, l] = data[(i + k - 2) * step + (j + l * 3 - 6)];
+                            }
+                        }
+                        //(1)判断条件2<=n(p)<=6          
+                        nCount = neighbour[1, 1] + neighbour[1, 2] + neighbour[1, 3] + neighbour[2, 1] + neighbour[2, 3] + neighbour[3, 1] + neighbour[3, 2] + neighbour[3, 3];
+                        if (nCount >= 2 && nCount <= 6)
+                            bCondition1 = true;
+                        else
+                        {
+                            data1[i * step1 + j] = 1;
+                            continue;
+                            //跳过, 加快速度                       
+                        }
+                        //(2)判断s(p)=1                      
+                        nCount = 0;
+                        if (neighbour[2, 3] == 0 && neighbour[1, 3] == 1)
+                            nCount++;
+                        if (neighbour[1, 3] == 0 && neighbour[1, 2] == 1)
+                            nCount++;
+                        if (neighbour[1, 2] == 0 && neighbour[1, 1] == 1)
+                            nCount++;
+                        if (neighbour[1, 1] == 0 && neighbour[2, 1] == 1)
+                            nCount++;
+                        if (neighbour[2, 1] == 0 && neighbour[3, 1] == 1)
+                            nCount++;
+                        if (neighbour[3, 1] == 0 && neighbour[3, 2] == 1)
+                            nCount++;
+                        if (neighbour[3, 2] == 0 && neighbour[3, 3] == 1)
+                            nCount++;
+                        if (neighbour[3, 3] == 0 && neighbour[2, 3] == 1)
+                            nCount++;
+                        if (nCount == 1)
+                            bCondition2 = true;
+                        else
+                        {
+                            data1[i * step1 + j] = 1;
+                            continue;
+                        }
+                        //(3)判断p0*p2*p4=0 or s(p2)!=1   
+                        if (neighbour[2, 3] * neighbour[1, 2] * neighbour[2, 1] == 0)
+                            bCondition3 = true;
+                        else
+                        {
+                            nCount = 0;
+                            if (neighbour[0, 2] == 0 && neighbour[0, 1] == 1)
+                                nCount++;
+                            if (neighbour[0, 1] == 0 && neighbour[1, 1] == 1)
+                                nCount++;
+                            if (neighbour[1, 1] == 0 && neighbour[2, 1] == 1)
+                                nCount++;
+                            if (neighbour[2, 1] == 0 && neighbour[2, 2] == 1)
+                                nCount++;
+                            if (neighbour[2, 2] == 0 && neighbour[2, 3] == 1)
+                                nCount++;
+                            if (neighbour[2, 3] == 0 && neighbour[1, 3] == 1)
+                                nCount++;
+                            if (neighbour[1, 3] == 0 && neighbour[0, 3] == 1)
+                                nCount++;
+                            if (neighbour[0, 3] == 0 && neighbour[0, 2] == 1)
+                                nCount++;
+                            if (nCount != 1)
+                                //s(p2)!=1                              
+                                bCondition3 = true;
+                            else
+                            {
+                                data1[i * step1 + j] = 1;
+                                continue;
+                            }
+                        }
+                        //(4)判断p2*p4*p6=0 or s(p4)!=1    
+                        if (neighbour[1, 2] * neighbour[2, 1] * neighbour[3, 2] == 0)
+                            bCondition4 = true;
+                        else
+                        {
+                            nCount = 0;
+                            if (neighbour[1, 1] == 0 && neighbour[1, 0] == 1)
+                                nCount++;
+                            if (neighbour[1, 0] == 0 && neighbour[2, 0] == 1)
+                                nCount++;
+                            if (neighbour[2, 0] == 0 && neighbour[3, 0] == 1)
+                                nCount++;
+                            if (neighbour[3, 0] == 0 && neighbour[3, 1] == 1)
+                                nCount++;
+                            if (neighbour[3, 1] == 0 && neighbour[3, 2] == 1)
+                                nCount++;
+                            if (neighbour[3, 2] == 0 && neighbour[2, 2] == 1)
+                                nCount++;
+                            if (neighbour[2, 2] == 0 && neighbour[1, 2] == 1)
+                                nCount++;
+                            if (neighbour[1, 2] == 0 && neighbour[1, 1] == 1)
+                                nCount++;
+                            if (nCount != 1)//s(p4)!=1       
+                                bCondition4 = true;
+                        }
+                        if (bCondition1 && bCondition2 && bCondition3 && bCondition4)
+                        {
+                            data1[i * step1 + j] = 0;
+                            bModified = true;
+                        }
+                        else
+                        {
+                            data1[i * step1 + j] = 1;
+                        }
+                    }
+                }
+                // 将细化了的临时图像bw_tem[w,h]copy到bw[w,h],完成一次细化   
+                for (int i = 2; i < ih - 2; i++)
+                    for (int j = 2; j < iw * 3 - 2; j++)
+                        data[i * step + j] = data1[i * step1 + j];
+            }
+            for (int i = 2; i < ih - 2; i++)
+            {
+                for (int j = 6; j < iw * 3 - 6; j += 3)
+                {
+                    if (data[i * step + j] == 1)
+
+                        data[i * step + j]
+                            = data[i * step + j + 1]
+                            = data[i * step + j + 2]
+                            = 0;
+
+                    else
+
+                        data[i * step + j]
+                            = data[i * step + j + 1]
+                            = data[i * step + j + 2]
+                            = 255;
+
+                }
+            }
+            srcImg.UnlockBits(dstData);
+            NImg.UnlockBits(dstData1);
+            return (srcImg);
+        }
+    }
+
+        public class LockBitmap
     {
         Bitmap source = null;
         IntPtr Iptr = IntPtr.Zero;
